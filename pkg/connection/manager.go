@@ -47,7 +47,7 @@ const (
 
 // StoreBuilderFn is a function that builds and returns a Store with a given
 // store config.
-type StoreBuilderFn func(ctx context.Context, local client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig) (Store, error)
+type StoreBuilderFn func(ctx context.Context, local client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig, vaultNamespace string) (Store, error)
 
 // A DetailsManagerOption configures a DetailsManager.
 type DetailsManagerOption func(*DetailsManager)
@@ -193,7 +193,7 @@ func (m *DetailsManager) connectStore(ctx context.Context, p *v1.PublishConnecti
 		return nil, errors.Wrap(err, errGetStoreConfig)
 	}
 
-	return m.storeBuilder(ctx, m.client, m.tcfg, sc.GetStoreConfig())
+	return m.storeBuilder(ctx, m.client, m.tcfg, sc.GetStoreConfig(), p.VaultNamespace)
 }
 
 // SecretToWriteMustBeOwnedBy requires that the current object is a

@@ -36,6 +36,9 @@ type PublishConnectionDetailsTo struct {
 	// Name is the name of the connection secret.
 	Name string `json:"name"`
 
+	// VaultNamespace is the namespace of the team in Vault.
+	VaultNamespace string `json:"vaultNamespace"`
+
 	// Metadata is the metadata for connection secret.
 	// +optional
 	Metadata *ConnectionSecretMetadata `json:"metadata,omitempty"`
@@ -111,7 +114,11 @@ type SecretStoreConfig struct {
 	// store connection secrets for cluster scoped resources.
 	// In case of "Vault", this would be used as the default parent path.
 	// Typically, should be set as Crossplane installation namespace.
-	DefaultScope string `json:"defaultScope"`
+
+	// NOTE(chai): As we want to push default scope to the managed resource
+	// so they can customize the parent path of the secret, we make this optional
+	// and fully scope the secret name at the managed resource level instead.
+	DefaultScope string `json:"defaultScope,omitempty"`
 
 	// Kubernetes configures a Kubernetes secret store.
 	// If the "type" is "Kubernetes" but no config provided, in cluster config

@@ -42,6 +42,7 @@ message Secret {
 message GetSecretRequest {
   ConfigReference config = 1;
   Secret secret = 2;
+  string vaultNamespace = 3;
 }
 
 // GetSecretResponse returns the secret from the secret store.
@@ -53,6 +54,7 @@ message GetSecretResponse {
 message ApplySecretRequest {
   ConfigReference config = 1;
   Secret secret = 2;
+  string vaultNamespace = 3;
 }
 
 // ApplySecretResponse returns if the secret is changed or not.
@@ -64,6 +66,7 @@ message ApplySecretResponse {
 message DeleteKeysRequest {
   ConfigReference config = 1;
   Secret secret = 2;
+  string vaultNamespace = 3;
 }
 
 // DeleteKeysResponse is returned if the secret is deleted.

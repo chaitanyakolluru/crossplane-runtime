@@ -36,12 +36,12 @@ const (
 // in a given config.
 //
 // All in-tree connection Store implementations needs to be registered here.
-func RuntimeStoreBuilder(ctx context.Context, local client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig) (Store, error) {
+func RuntimeStoreBuilder(ctx context.Context, local client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig, vaultNamespace string) (Store, error) {
 	switch *cfg.Type {
 	case v1.SecretStoreKubernetes:
 		return kubernetes.NewSecretStore(ctx, local, nil, cfg)
 	case v1.SecretStorePlugin:
-		return plugin.NewSecretStore(ctx, local, tcfg, cfg)
+		return plugin.NewSecretStore(ctx, local, tcfg, cfg, vaultNamespace)
 	}
 	return nil, errors.Errorf(errFmtUnknownSecretStore, *cfg.Type)
 }

@@ -47,11 +47,12 @@ type SecretStore struct {
 	kubeClient client.Client
 	config     *v1.Config
 
-	defaultScope string
+	defaultScope   string
+	vaultNamespace string
 }
 
 // NewSecretStore returns a new External SecretStore.
-func NewSecretStore(_ context.Context, kube client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig) (*SecretStore, error) {
+func NewSecretStore(_ context.Context, kube client.Client, tcfg *tls.Config, cfg v1.SecretStoreConfig, vaultNamespace string) (*SecretStore, error) {
 	creds := credentials.NewTLS(tcfg)
 	conn, err := grpc.Dial(cfg.Plugin.Endpoint, grpc.WithTransportCredentials(creds))
 	if err != nil {
@@ -59,16 +60,17 @@ func NewSecretStore(_ context.Context, kube client.Client, tcfg *tls.Config, cfg
 	}
 
 	return &SecretStore{
-		kubeClient:   kube,
-		client:       essproto.NewExternalSecretStorePluginServiceClient(conn),
-		config:       &cfg.Plugin.ConfigRef,
-		defaultScope: cfg.DefaultScope,
+		kubeClient:     kube,
+		client:         essproto.NewExternalSecretStorePluginServiceClient(conn),
+		config:         &cfg.Plugin.ConfigRef,
+		defaultScope:   cfg.DefaultScope,
+		vaultNamespace: vaultNamespace,
 	}, nil
 }
 
 // ReadKeyValues reads and returns key value pairs for a given Secret.
 func (ss *SecretStore) ReadKeyValues(ctx context.Context, n store.ScopedName, s *store.Secret) error {
-	resp, err := ss.client.GetSecret(ctx, &essproto.GetSecretRequest{Secret: &essproto.Secret{ScopedName: ss.getScopedName(n)}, Config: ss.getConfigReference()})
+	resp, err := ss.client.GetSecret(ctx, &essproto.GetSecretRequest{Secret: &essproto.Secret{ScopedName: ss.getScopedName(n)}, Config: ss.getConfigReference(), VaultNamespace: ss.vaultNamespace})
 	if err != nil {
 		return errors.Wrap(err, errGet)
 	}
@@ -105,7 +107,7 @@ func (ss *SecretStore) WriteKeyValues(ctx context.Context, s *store.Secret, _ ..
 		}
 	}
 
-	resp, err := ss.client.ApplySecret(ctx, &essproto.ApplySecretRequest{Secret: sec, Config: ss.getConfigReference()})
+	resp, err := ss.client.ApplySecret(ctx, &essproto.ApplySecretRequest{Secret: sec, Config: ss.getConfigReference(), VaultNamespace: ss.vaultNamespace})
 	if err != nil {
 		return false, errors.Wrap(err, errApply)
 	}
@@ -115,7 +117,7 @@ func (ss *SecretStore) WriteKeyValues(ctx context.Context, s *store.Secret, _ ..
 
 // DeleteKeyValues delete key value pairs from a given Secret.
 func (ss *SecretStore) DeleteKeyValues(ctx context.Context, s *store.Secret, _ ...store.DeleteOption) error {
-	_, err := ss.client.DeleteKeys(ctx, &essproto.DeleteKeysRequest{Secret: &essproto.Secret{ScopedName: ss.getScopedName(s.ScopedName)}, Config: ss.getConfigReference()})
+	_, err := ss.client.DeleteKeys(ctx, &essproto.DeleteKeysRequest{Secret: &essproto.Secret{ScopedName: ss.getScopedName(s.ScopedName)}, Config: ss.getConfigReference(), VaultNamespace: ss.vaultNamespace})
 
 	return errors.Wrap(err, errDelete)
 }
